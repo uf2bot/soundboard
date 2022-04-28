@@ -1,0 +1,4 @@
+.idea
+venv
+uffbot/data
+__pycache__
