@@ -4,7 +4,6 @@ import sys
 from typing import List
 
 from loguru import logger
-import discord
 from uffbot.uffclient import UffClient
 from discord.errors import LoginFailure
 
@@ -25,7 +24,9 @@ def get_active_guild_ids() -> List[int]:
 
 def get_token() -> str:
     try:
-        return os.environ['TOKEN']
+        token = os.environ['TOKEN']
+        os.environ['TOKEN'] = ""
+        return token
     except KeyError:
         logger.error("You need to set the 'TOKEN' environmental variable to a valid discord token!")
         sys.exit()
