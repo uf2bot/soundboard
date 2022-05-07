@@ -2,3 +2,4 @@
 venv
 uffbot/data
 __pycache__
+docker-compose.yaml
