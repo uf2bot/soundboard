@@ -4,7 +4,7 @@ import sys
 from typing import List
 
 from loguru import logger
-from uffbot.uffclient import UffClient
+from uffbot.bot import UffBot
 from discord.errors import LoginFailure
 
 
@@ -34,11 +34,11 @@ def get_token() -> str:
 
 async def main():
     active_guilds = get_active_guild_ids()
-    uff_client = UffClient(active_guilds)
+    bot = UffBot(active_guilds)
 
-    async with uff_client:
+    async with bot:
         try:
-            await uff_client.start(get_token())
+            await bot.start(get_token())
         except LoginFailure:
             logger.error("The token you provided is not valid!")
             sys.exit()

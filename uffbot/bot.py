@@ -8,7 +8,7 @@ from discord.ext import commands
 from uffbot.soundboard import SoundBoard
 
 
-class UffClient(commands.Bot):
+class UffBot(commands.Bot):
     def __init__(self, active_guild_ids: Union[List[int]], **kwargs):
         intents = discord.Intents.default()
         intents.message_content = True

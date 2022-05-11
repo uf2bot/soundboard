@@ -84,11 +84,11 @@ class SoundTransformer(app_commands.Transformer):
 
 
 class SoundBoard(app_commands.Group):
-    def __init__(self, client: discord.Client, **kwargs):
+    def __init__(self, bot: discord.Client, **kwargs):
         super().__init__(**kwargs)
 
         self.name = "sb"
-        self.client = client
+        self.bot = bot
 
         self.voice_client: Union[discord.VoiceClient, None] = None
         self.current_sound: Union[Sound, None] = None
@@ -98,9 +98,9 @@ class SoundBoard(app_commands.Group):
 
         asyncio.create_task(self.disconnector())
 
-        @self.client.event
+        @self.bot.event
         async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-            if member != self.client.user:
+            if member != self.bot.user:
                 if before.channel is None and after.channel is not None:
                     await self.on_voice_join(member, after)
                 elif before.channel is not None and after.channel is None:
