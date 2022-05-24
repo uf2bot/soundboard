@@ -17,10 +17,6 @@ MP3_DIR = pathlib.Path(__file__).parent / 'data' / 'mp3'
 
 
 class Sounds(UserDict):
-    def __init__(self):
-        super().__init__()
-        self.reload()
-
     def __getitem__(self, item):
         if item == '*':
             return self.get_random_sound()
@@ -36,11 +32,14 @@ class Sounds(UserDict):
 
     @staticmethod
     def get_mp3s():
-        for raw_filename in os.listdir(MP3_DIR):
-            filename = str(raw_filename)
-            filepath = MP3_DIR/filename
-            name = filename.rstrip('.mp3')
-            yield MP3Sound(name, filepath)
+        try:
+            for raw_filename in os.listdir(MP3_DIR):
+                filename = str(raw_filename)
+                filepath = MP3_DIR/filename
+                name = filename.rstrip('.mp3')
+                yield MP3Sound(name, filepath)
+        except FileNotFoundError:
+            logger.warning("mp3 data directory does not exist.")
 
     def get_random_sound(self) -> Sound:
         return random.choice(list(self.values()))
@@ -96,6 +95,8 @@ class SoundBoard(app_commands.Group):
         # TODO: make persistent
         self.themes: Dict[discord.Member: str] = {}
 
+        SoundTransformer.sounds.reload()
+
         asyncio.create_task(self.disconnector())
 
         @self.bot.event
@@ -111,18 +112,21 @@ class SoundBoard(app_commands.Group):
     @app_commands.command(name="list", description="Lists all available sounds.")
     async def list_sounds(self, interaction: discord.Interaction):
         # TODO: handle oversized messages, make embed(s)
-        ls = "\n".join(SoundTransformer.sounds.keys())
-        await interaction.response.send_message(ls[:1999], ephemeral=True)
+        sound_list = "\n".join(SoundTransformer.sounds.keys())
+        if len(sound_list) > 0:
+            await interaction.response.send_message(sound_list[:1999], ephemeral=True)
+        else:
+            await interaction.response.send_message("There are no sounds!", ephemeral=True)
 
     @app_commands.command(name="upload", description="Upload a new mp3 sound file.")
     async def upload_sound(self, interaction: discord.Interaction, file: discord.Attachment):
         if not file.content_type == 'audio/mpeg':
             # TODO: use ffmpeg to check if the file is actually playable
             await interaction.response.send_message(
-                f'the uploaded file must be a mp3-file and its name must end with ".mp3"', ephemeral=True)
+                'the uploaded file must be a mp3-file and its name must end with ".mp3"', ephemeral=True)
         elif file.filename.rstrip('.mp3') in SoundTransformer.sounds:
             await interaction.response.send_message(
-                f'a sound with this filename already exists', ephemeral=True)
+                'a sound with this filename already exists', ephemeral=True)
         else:
             await file.save(MP3_DIR / file.filename)
             SoundTransformer.sounds.reload()
@@ -138,9 +142,9 @@ class SoundBoard(app_commands.Group):
         if target is None:
             target = interaction.user
         try:
-            vc = target.voice.channel
-            await self.play_sound(vc, sound)
-            await interaction.response.send_message(f'playing "{sound}" in <#{vc.id}>.', ephemeral=True)
+            voice_channel = target.voice.channel
+            await self.play_sound(voice_channel, sound)
+            await interaction.response.send_message(f'playing "{sound}" in <#{voice_channel.id}>.', ephemeral=True)
 
         except AttributeError:
             await interaction.response.send_message(f"<@{target.id}> is not in a voice channel!", ephemeral=True)
@@ -151,9 +155,9 @@ class SoundBoard(app_commands.Group):
     async def stop_playback(self, interaction: discord.Interaction):
         try:
             self.voice_client.stop()
-            await interaction.response.send_message(f'stopped playback of "{self.current_sound}".', ephemeral=True)
+            await interaction.response.send_message('stopped playback of "{self.current_sound}".', ephemeral=True)
         except AttributeError:
-            await interaction.response.send_message(f'no sound is being played right now.', ephemeral=True)
+            await interaction.response.send_message('no sound is being played right now.', ephemeral=True)
 
     @app_commands.command(name="theme", description="manage user theme sounds.")
     async def manage_theme(self,
@@ -165,7 +169,7 @@ class SoundBoard(app_commands.Group):
     @app_commands.command(name="reload", description="Reload available sounds from filesystem.")
     async def reload_mp3s(self, interaction: discord.Interaction):
         SoundTransformer.sounds.reload()
-        await interaction.response.send_message(f'reloaded sounds.', ephemeral=True)
+        await interaction.response.send_message('reloaded sounds.', ephemeral=True)
 
     async def on_voice_join(self, member: discord.Member, after: discord.VoiceState):
         logger.debug(f'{member} joined voice channel: "{after.channel}"')

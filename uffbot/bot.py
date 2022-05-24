@@ -1,15 +1,15 @@
-from typing import List, Union
+from typing import List
 
 from loguru import logger
 
 import discord
 from discord.ext import commands
 
-from uffbot.soundboard import SoundBoard
+from uffbot.commands import SoundBoard
 
 
 class UffBot(commands.Bot):
-    def __init__(self, active_guild_ids: Union[List[int]], **kwargs):
+    def __init__(self, active_guild_ids: List[int], **kwargs):
         intents = discord.Intents.default()
         intents.message_content = True
 
