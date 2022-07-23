@@ -13,7 +13,7 @@ import discord
 from discord import FFmpegOpusAudio, app_commands
 
 
-MP3_DIR = pathlib.Path(__file__).parent / 'data' / 'mp3'
+MP3_DIR = pathlib.Path(__file__).parent.parent / 'data' / 'mp3'
 
 
 class Sounds(UserDict):
@@ -188,17 +188,16 @@ class SoundBoard(app_commands.Group):
         while True:
             if self.voice_client is not None and not self.voice_client.is_playing():
                 await self.voice_client.disconnect()
-                self.voice_client = None
                 self.current_sound = None
             await asyncio.sleep(0.1)
 
     async def play_sound(self, voice_channel: discord.VoiceChannel, sound: Sound):
-        if not self.voice_client:
+        if not self.voice_client or not self.voice_client.is_connected():
             self.voice_client = await voice_channel.connect()
 
             def after_play(error):
                 if error:
-                    logger.debug(f'an error occurred while playing audio: {error}')
+                    logger.debug(f'an error occurred while playing "{sound}": {error}')
 
             self.voice_client.play(sound.audio, after=after_play)
             self.current_sound = sound

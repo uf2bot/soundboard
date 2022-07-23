@@ -23,9 +23,10 @@ RUN apt-get install git -y
 RUN apt-get install gcc -y
 RUN apt-get install ffmpeg -y
 
-# Install git lfs
+# Install git lfs and pull all files from remote
 RUN apt-get install git-lfs -y
 RUN git lfs install
+
 
 # clone discord.py v2.0 from github and install it
 RUN git clone https://github.com/Rapptz/discord.py.git
