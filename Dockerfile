@@ -1,4 +1,4 @@
-FROM martinkist/discord.py-docker:latest
+FROM python:3-slim
 
 WORKDIR /uffbot
 
@@ -9,5 +9,8 @@ ADD main.py .
 # install uffbots requirements
 RUN pip install -r requirements.txt
 
-#ENTRYPOINT ["ls"]
+# install ffmpeg
+RUN apt-get update
+RUN apt-get install -y ffmpeg
+
 ENTRYPOINT ["python3", "main.py"]
